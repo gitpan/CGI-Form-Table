@@ -1,5 +1,8 @@
 Revision history for CGI-Form-Table
 
+0.01    2004-10-04 15:45
+        implemented generation of table (ugly)
+
 0.00    2004-10-04 13:55
         generation unimplemented
         parsing just dandy
