@@ -1,5 +1,8 @@
 Revision history for CGI-Form-Table
 
+0.08    2004-10-19 12:20
+        added column_header attribute (experimental)
+
 0.07    2004-10-18 09:50
         multiple forms per page now work properly
         refactor javascript to accept table prefix as param

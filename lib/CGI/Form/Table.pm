@@ -4,7 +4,7 @@ package CGI::Form::Table;
 use strict;
 use warnings;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =head1 NAME
 
@@ -12,9 +12,9 @@ CGI::Form::Table - create a table of form inputs
 
 =head1 VERSION 
 
-version 0.07
+version 0.08
 
- $Id: Table.pm,v 1.5 2004/10/18 13:48:11 rjbs Exp $
+ $Id: Table.pm,v 1.6 2004/10/19 16:20:20 rjbs Exp $
 
 =head1 SYNOPSIS
 
@@ -84,6 +84,11 @@ the form expandible/shrinkable; see the C<javascript> method.  (L</"SEE ALSO">)
 
 =cut
 
+sub _header {
+	my ($self, $name) = @_;
+	$self->{column_header}{$name} || $name;
+}
+
 sub _content {
 	my ($self, $row, $name) = @_;
 
@@ -124,7 +129,7 @@ sub as_html {
 	$html .= "\t\t<tr>";
 	$html .= "<td></td>"; # header for row number
 	$html .= "<td></td><td></td>"; # header for +/-
-	$html .= "<th>$_</th>" for @{$self->{columns}};
+	$html .= "<th>$_</th>" for map { $self->_header($_) } @{$self->{columns}};
 	$html .= "<td></td>"; # header for row number
 	$html .= "</tr>\n";
 	$html .= "\t</thead>\n";
