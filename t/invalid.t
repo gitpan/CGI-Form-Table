@@ -4,7 +4,10 @@ use strict;
 use warnings;
 
 use CGI;
-BEGIN { use_ok("CGI::Form::Table::Reader"); }
+BEGIN {
+	use_ok("CGI::Form::Table");
+	use_ok("CGI::Form::Table::Reader");
+}
 
 is(
 	CGI::Form::Table::Reader->new(),
@@ -34,3 +37,17 @@ is(
 	);
 }
 
+{
+	my $form = CGI::Form::Table->new();
+	is($form, undef, "missing all params to CFT->new");
+}
+
+{
+	my $form = CGI::Form::Table->new(columns => [qw(x y z)]);
+	is($form, undef, "missing prefix param to CFT->new");
+}
+
+{
+	my $form = CGI::Form::Table->new(prefix => 'someform');
+	is($form, undef, "missing columns param to CFT->new");
+}

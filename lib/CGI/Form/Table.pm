@@ -4,7 +4,7 @@ package CGI::Form::Table;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.05';
 
 =head1 NAME
 
@@ -12,15 +12,18 @@ CGI::Form::Table - create a table of form inputs
 
 =head1 VERSION 
 
-version 0.01
+version 0.05
 
- $Id: Table.pm,v 1.2 2004/10/04 19:43:33 rjbs Exp $
+ $Id: Table.pm,v 1.4 2004/10/13 19:53:57 rjbs Exp $
 
 =head1 SYNOPSIS
 
  use CGI::Form::Table;
 
- my $form = CGI::Form::Table->new(columns => [qw(lname fname job age)]);
+ my $form = CGI::Form::Table->new(
+   prefix  => 'employee',
+   columns => [qw(lname fname job age)]
+ );
 
  print $form->as_html;
 
@@ -45,6 +48,24 @@ C<prefix>, which gives the unique prefix for input fields.
 If given, C<initial_rows> specifies how many rows should initially be in the
 form.
 
+Another argument, C<column_content>, may be passed.  It must contain a hashref,
+with entries providing subs to produce initial content.  The subs are passed the
+form object, the row number, and the name of the column.  For example, to add a
+reminder of the current row in the middle of each row, you might create a form
+like this:
+
+ my $form = CGI::Form::Table->new(
+   prefix  => 'simpleform',
+   columns => [qw(one two reminder three four)],
+   column_content => {
+     reminder => sub { $_[1] }
+   }
+ );
+
+This can be useful for forms that require SELECT elements or other complicated
+parts.  (The JavaScript will just copy the column value when new rows are added,
+updating the name attribute.)
+
 =cut
 
 sub new {
@@ -62,6 +83,36 @@ the form expandible/shrinkable.  (L</"SEE ALSO">)
 
 =cut
 
+sub _content {
+	my ($self, $row, $name) = @_;
+
+	my $content_generator =
+		$self->{column_content}{$name}
+		? $self->{column_content}{$name}
+		: $self->_input;
+	return $content_generator->($self, $row, $name);
+}
+
+# given a list of two-element arrayrefs, return a coderef to produce a select
+# element via column_content
+sub _select {
+	my ($self, @pairs) = @_;
+	sub {
+		my ($self, $row, $name) = @_;
+		my $content = "<select name='$self->{prefix}_${row}_$name'>";
+		$content .= "<option value='$_->[0]'>$_->[1]</option>\n" for @pairs;
+		$content .= "</select>\n";
+		return $content;
+	}
+}
+
+sub _input {
+	sub {
+		my ($self, $row, $name) = @_;
+		return "<input name='$self->{prefix}_${row}_$name' />";
+	}
+}
+
 sub as_html {
 	my ($self) = @_;
 
@@ -76,7 +127,7 @@ sub as_html {
 		$html .= "\t<tr>";
 		$html .= "<td><input type='button' onClick='cloneParentOf(this.parentNode)' value='+' /></td>";
 		$html .= "<td><input type='button' onClick='removeParentOf(this.parentNode)' value='-' /></td>";
-		$html .= "<td><input name='$self->{prefix}_${row_number}_$_' /></td>"
+		$html .= "<td>" . $self->_content($row_number, $_) . "</td>"
 			for @{$self->{columns}};
 		$html .= "</tr>\n";
 	}

@@ -4,7 +4,7 @@ package CGI::Form::Table::Reader;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.05';
 
 =head1 NAME
 
@@ -12,9 +12,9 @@ CGI::Form::Table::Reader - read a table of form inputs
 
 =head1 VERSION 
 
-version 0.01
+version 0.05
 
- $Id: Reader.pm,v 1.1.1.1 2004/10/04 17:54:06 rjbs Exp $
+ $Id: Reader.pm,v 1.2 2004/10/13 19:53:57 rjbs Exp $
 
 =head1 SYNOPSIS
 

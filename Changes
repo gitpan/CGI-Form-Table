@@ -1,5 +1,11 @@
 Revision history for CGI-Form-Table
 
+0.05    2004-10-13 13:00
+        fixed the C::F::T synopsis, which would not have worked
+        added column_content attribute for nonstandard columns
+        added experimental input/select generators
+        100% coverage
+
 0.01    2004-10-04 15:45
         implemented generation of table (ugly)
 

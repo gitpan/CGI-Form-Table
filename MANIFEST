@@ -9,4 +9,5 @@ t/00.load.t
 t/invalid.t
 t/pod-coverage.t
 t/pod.t
+t/make_table.t
 t/read_table.t
