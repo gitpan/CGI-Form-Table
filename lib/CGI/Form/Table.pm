@@ -4,7 +4,7 @@ package CGI::Form::Table;
 use strict;
 use warnings;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 =head1 NAME
 
@@ -12,9 +12,9 @@ CGI::Form::Table - create a table of form inputs
 
 =head1 VERSION 
 
-version 0.08
+version 0.09
 
- $Id: Table.pm,v 1.6 2004/10/19 16:20:20 rjbs Exp $
+ $Id: Table.pm,v 1.8 2004/10/19 23:56:54 rjbs Exp $
 
 =head1 SYNOPSIS
 
@@ -158,8 +158,8 @@ EOT
 =head2 javascript
 
 This method returns JavaScript that will make the handlers for the HTML buttons
-work.  Currently this code is known to work in MSIE and Firefox, but not Safari
-or Omniweb.  (Patches welcome.)
+work.  This code has been (poorly) tested in Firefox, MSIE, and WebKit-based
+browsers.
 
 =cut
 
@@ -188,7 +188,7 @@ return <<"EOS";
 				prefix_pattern = new RegExp('^' + prefix + '_\\d+_');
 				for (k = 0; k < inputs.length; k++) {
 					if (inputs[k].name.match(prefix_pattern))
-						inputs[k].name = inputs[k].name.replace(prefix_pattern, rowNumber + "_");
+						inputs[k].name = inputs[k].name.replace(prefix_pattern, prefix + "_" + rowNumber + "_");
 				}
 			}
 			var cell_count = rowList.item(i).cells.length;

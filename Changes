@@ -1,5 +1,9 @@
 Revision history for CGI-Form-Table
 
+0.09    2004-10-19 19:50
+        fixed stupid javascript bug (didn't escape \ in regexp)
+        javascript seems to work in all major browsers now
+
 0.08    2004-10-19 12:20
         added column_header attribute (experimental)
 
