@@ -4,17 +4,19 @@ package CGI::Form::Table;
 use strict;
 use warnings;
 
-our $VERSION = '0.14';
-
 =head1 NAME
 
 CGI::Form::Table - create a table of form inputs
 
 =head1 VERSION 
 
-version 0.14
+version 0.16
 
- $Id: Table.pm,v 1.19 2005/01/17 18:29:30 rjbs Exp $
+ $Id: Table.pm,v 1.21 2005/03/08 18:44:50 rjbs Exp $
+
+=cut
+
+our $VERSION = '0.16';
 
 =head1 SYNOPSIS
 
@@ -48,6 +50,18 @@ C<prefix>, which gives the unique prefix for input fields.
 
 If given, C<initial_rows> specifies how many rows should initially be in the
 form.
+
+Instead of C<initial_rows>, you can pass C<initial_values>, a reference to an
+array of hashes providing values for the columns of each row.  For example:
+
+	my $table = CGI::Form::Table->new(
+		prefix  => "charsheet",
+		columns => [ qw(ability score) ],
+		initial_values => [
+			{ ability => 'Str', score => '18/00' },
+			{ ability => 'Cha', score => '11'    }
+		]
+	);
 
 C<column_header>, if passed, is a hash of text strings to use as column
 headers.  The keys are column names.  Columns without C<column_header> entries

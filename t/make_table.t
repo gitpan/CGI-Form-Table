@@ -80,9 +80,15 @@ use_ok( 'CGI::Form::Table' );
 		prefix  => 'whatever',
 		columns => [qw(profile xmole dopeconc thick dopant)],
 		column_header  => { profile => 'ingredient' },
-		column_content => { profile => CGI::Form::Table->_select(
-			[[ '' => 'nothing' ], [ PB => 'PB' ], [ Nutella => 'Nutella' ], [ Tahini => 'Tahini' ]]
-		) },
+		column_content => {
+			profile => CGI::Form::Table->_select([
+				[ '' => 'nothing' ],
+				[ PB => 'PB' ],
+				[ Nutella => 'Nutella' ],
+				[ Tahini => 'Tahini' ]
+			]),
+			thick => CGI::Form::Table->_input({type => 'slider'})
+		},
 		initial_rows   => 4,
 		initial_values => [
 			{ profile => 'PB',      thick => 500, dopant => 'chocolate' },
