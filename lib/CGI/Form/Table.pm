@@ -4,7 +4,7 @@ package CGI::Form::Table;
 use strict;
 use warnings;
 
-our $VERSION = '0.12';
+our $VERSION = '0.14';
 
 =head1 NAME
 
@@ -12,9 +12,9 @@ CGI::Form::Table - create a table of form inputs
 
 =head1 VERSION 
 
-version 0.12
+version 0.14
 
- $Id: Table.pm,v 1.15 2004/10/22 16:41:53 rjbs Exp $
+ $Id: Table.pm,v 1.19 2005/01/17 18:29:30 rjbs Exp $
 
 =head1 SYNOPSIS
 
@@ -138,7 +138,7 @@ EOH
 	return $html;
 }
 
-=head2 $form->column_header($column_name)
+=head2 C<< $form->column_header($column_name) >>
 
 This method returns the text that should be used as the column header in the
 table output.  If no header was given in the initialization of the form, the
@@ -152,7 +152,7 @@ sub column_header {
 	defined $self->{column_header}{$name} ? $self->{column_header}{$name} : $name;
 }
 
-=head2 $form->cell_content($row, $column_name)
+=head2 C<< $form->cell_content($row, $column_name) >>
 
 This method returns the text (HTML) that should appear in the given row and
 column.  If no C<column_content> entry was given for the column, a basic input
@@ -170,17 +170,19 @@ sub cell_content {
 	return $content_generator->($self, $row, $name);
 }
 
-# $form->_select(@pairs)
+# $form->_select(\@pairs, \%arg)
 #
-# given a list of two-element arrayrefs (value, text), returns a coderef to
-# produce a select element via column_content
+# given a ref to a list of two-element arrayrefs (value, text), returns a
+# coderef to produce a select element via column_content
 sub _select {
-	my ($self, @pairs) = @_;
+	my ($self, $pairs, $arg) = @_;
 	sub {
 		my ($self, $row, $name) = @_;
-		my $content = "<select name='$self->{prefix}_${row}_$name'>";
+		my $content  = "<select name='$self->{prefix}_${row}_$name'";
+		   $content .= " $_='$arg->{$_}'" for keys %$arg;
+		   $content .= ">";
 		my $value   = $self->cell_value($row, $name);
-		for (@pairs) {
+		for (@$pairs) {
 			$content .= "<option value='$_->[0]'"
 				. (($value && $_->[0] && $value eq $_->[0]) ? " selected='selected'" : '')
 				. ">$_->[1]</option>\n";
@@ -190,18 +192,21 @@ sub _select {
 	}
 }
 
-# $form->_input
+# $form->_input(\%arg)
 #
 # returns a coderef to produce an input element via column_content
 sub _input {
+	my ($self, $arg) = @_;
+	$arg ||= {};
 	sub {
 		my ($self, $row, $name) = @_;
-		return "<input name='$self->{prefix}_${row}_$name' value='"
+		return "<input " . ($arg->{type} ? "type='$arg->{type}'" : '')
+			. "name='$self->{prefix}_${row}_$name' value='"
 			. ($self->cell_value($row,$name) || '') . "' />";
 	}
 }
 
-=head2 $form->cell_value($row, $column_name)
+=head2 C<< $form->cell_value($row, $column_name) >>
 
 This method returns the default value for the given row and column, taken from
 the C<initial_values> passed to the initializer.
@@ -214,7 +219,7 @@ sub cell_value {
 	return $self->{initial_values}[$row]{$column_name};
 } 
 
-=head2 javascript
+=head2 C<< $class->javascript >>
 
 This method returns JavaScript that will make the handlers for the HTML buttons
 work.  This code has been (poorly) tested in Firefox, MSIE, and WebKit-based
@@ -234,7 +239,7 @@ return <<"EOS";
 	function cloneParentOf(child, prefix) {
 		clone = child.parentNode.cloneNode( true );
 		tbody = child.parentNode.parentNode;
-		tbody.insertBefore( clone, child.parentNode );
+		tbody.insertBefore( clone, child.parentNode.nextSibling );
 		renumberRows(tbody, prefix);
 	}
 	function renumberRows(tbody, prefix) {

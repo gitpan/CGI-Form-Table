@@ -1,5 +1,10 @@
 Revision history for CGI-Form-Table
 
+1.14    2005-01-17
+        * Happy birthday, Gloria
+        new rows are now added after the current row
+        changed calling of _widget methods
+
 0.12    2004-10-21 13:20
         made more public interface for customizing output
         added initial_values to put an existing object into a form

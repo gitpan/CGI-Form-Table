@@ -37,7 +37,7 @@ use_ok( 'CGI::Form::Table' );
 		columns => [qw(profile xmole dopeconc thick dopant)],
 		column_content => {
 			xmole  => sub { 'disabled' },
-			dopant => CGI::Form::Table->_select([ A => 'Alpha' ], [B => 'Beta' ])
+			dopant => CGI::Form::Table->_select([[ A => 'Alpha' ], [B => 'Beta' ]])
 		}
 	);
 
@@ -81,7 +81,7 @@ use_ok( 'CGI::Form::Table' );
 		columns => [qw(profile xmole dopeconc thick dopant)],
 		column_header  => { profile => 'ingredient' },
 		column_content => { profile => CGI::Form::Table->_select(
-			[ '' => 'nothing' ], [ PB => 'PB' ], [ Nutella => 'Nutella' ], [ Tahini => 'Tahini' ]
+			[[ '' => 'nothing' ], [ PB => 'PB' ], [ Nutella => 'Nutella' ], [ Tahini => 'Tahini' ]]
 		) },
 		initial_rows   => 4,
 		initial_values => [
