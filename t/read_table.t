@@ -22,22 +22,22 @@ BASIC: {
 	my $target = [
 		{
 			'profile' => 'n+ InGaAs',
-			'xmole' => '53.2',
-			'dopeconc' => '1e+16',
+			'xmole' => 53.2,
+			'dopeconc' => 1e+16,
 			'thick' => 7000,
 			'dopant' => 'Si'
 		},
 		{
 			'profile' => 'n InGaAs',
-			'xmole' => '53.2',
+			'xmole' => 53.2,
 			'dopeconc' => '',
 			'thick' => 4000,
 			'dopant' => ''
 		},
 		{
 			'profile' => 'p+ InGaAs',
-			'xmole' => '53.2',
-			'dopeconc' => '4e+19',
+			'xmole' => 53.2,
+			'dopeconc' => 4e+19,
 			'thick' => 700,
 			'dopant' => 'C'
 		}

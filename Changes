@@ -1,5 +1,9 @@
 Revision history for CGI-Form-Table
 
+0.12    2004-10-21 13:20
+        made more public interface for customizing output
+        added initial_values to put an existing object into a form
+
 0.09    2004-10-19 19:50
         fixed stupid javascript bug (didn't escape \ in regexp)
         (no, really this time)

@@ -4,7 +4,7 @@ package CGI::Form::Table;
 use strict;
 use warnings;
 
-our $VERSION = '0.10';
+our $VERSION = '0.12';
 
 =head1 NAME
 
@@ -12,9 +12,9 @@ CGI::Form::Table - create a table of form inputs
 
 =head1 VERSION 
 
-version 0.10
+version 0.12
 
- $Id: Table.pm,v 1.9 2004/10/20 14:24:20 rjbs Exp $
+ $Id: Table.pm,v 1.15 2004/10/22 16:41:53 rjbs Exp $
 
 =head1 SYNOPSIS
 
@@ -49,6 +49,10 @@ C<prefix>, which gives the unique prefix for input fields.
 If given, C<initial_rows> specifies how many rows should initially be in the
 form.
 
+C<column_header>, if passed, is a hash of text strings to use as column
+headers.  The keys are column names.  Columns without C<column_header> entries
+are headed by their names.
+
 Another argument, C<column_content>, may be passed.  It must contain a hashref,
 with entries providing subs to produce initial content.  The subs are passed the
 form object, the row number, and the name of the column.  For example, to add a
@@ -74,22 +78,89 @@ sub new {
 	return unless $arg{columns};
 	return unless $arg{prefix};
 	$arg{initial_rows} = 1 unless $arg{initial_rows};
+	$arg{initial_rows} = @{$arg{initial_values}}
+		if ($arg{initial_values} && @{$arg{initial_values}} > $arg{initial_rows});
 	bless \%arg => $class;
 }
 
-=head2 C<< CGI::Form::Table->as_html >>
+=head2 C<< $form->as_html >>
 
 This returns HTML representing the form object.  JavaScript is required to make
 the form expandible/shrinkable; see the C<javascript> method.  (L</"SEE ALSO">)
 
 =cut
 
-sub _header {
-	my ($self, $name) = @_;
-	$self->{column_header}{$name} || $name;
+sub as_html {
+	my ($self) = @_;
+	my $prefix = $self->{prefix};
+
+	my $column_headers = join '',
+		map { "\t\t\t<th class='input_column'>" . $self->column_header($_) . "</th>\n" }
+		@{$self->{columns}};
+
+	my $html = <<EOH;
+<table class='cft $prefix'>
+	<thead>
+		<tr>
+			<td class='row_number'></td>
+			<td class='add button'></td>
+			<td class='delete button'></td>
+$column_headers
+			<td class='row_number'></td>
+		</tr>
+	</thead>
+
+	<tbody>
+EOH
+
+	for my $row_number (1 .. $self->{initial_rows}) {
+		my $content = join '',
+			map { "<td class='input_column'>" . $self->cell_content($row_number, $_) . "</td>" }
+			@{$self->{columns}};
+
+		$html .= <<EOH;
+		<tr>
+			<td class='row_number'>$row_number</td>
+			<td class='add button'>
+		  	<input type='button' onClick='cloneParentOf(this.parentNode, "$prefix")' value='+' />
+		  </td>
+		  <td class='delete button'>
+				<input type='button' onClick='removeParentOf(this.parentNode, "$prefix")' value='-' />
+			</td>
+			$content
+			<td class='row_number'>$row_number</td>
+		</tr>
+EOH
+	}
+	$html .= "\t</tbody>\n";
+	$html .= "</table>\n";
+
+	return $html;
 }
 
-sub _content {
+=head2 $form->column_header($column_name)
+
+This method returns the text that should be used as the column header in the
+table output.  If no header was given in the initialization of the form, the
+column name is returned verbatim.  (No checking is done to ensure that the
+named column actually exists.)
+
+=cut
+
+sub column_header {
+	my ($self, $name) = @_;
+	defined $self->{column_header}{$name} ? $self->{column_header}{$name} : $name;
+}
+
+=head2 $form->cell_content($row, $column_name)
+
+This method returns the text (HTML) that should appear in the given row and
+column.  If no C<column_content> entry was given for the column, a basic input
+element is generated.
+
+=cut
+
+sub cell_content {
 	my ($self, $row, $name) = @_;
 
 	my $content_generator =
@@ -99,61 +170,49 @@ sub _content {
 	return $content_generator->($self, $row, $name);
 }
 
-# given a list of two-element arrayrefs, return a coderef to produce a select
-# element via column_content
+# $form->_select(@pairs)
+#
+# given a list of two-element arrayrefs (value, text), returns a coderef to
+# produce a select element via column_content
 sub _select {
 	my ($self, @pairs) = @_;
 	sub {
 		my ($self, $row, $name) = @_;
 		my $content = "<select name='$self->{prefix}_${row}_$name'>";
-		$content .= "<option value='$_->[0]'>$_->[1]</option>\n" for @pairs;
+		my $value   = $self->cell_value($row, $name);
+		for (@pairs) {
+			$content .= "<option value='$_->[0]'"
+				. (($value && $_->[0] && $value eq $_->[0]) ? " selected='selected'" : '')
+				. ">$_->[1]</option>\n";
+		}
 		$content .= "</select>\n";
 		return $content;
 	}
 }
 
+# $form->_input
+#
+# returns a coderef to produce an input element via column_content
 sub _input {
 	sub {
 		my ($self, $row, $name) = @_;
-		return "<input name='$self->{prefix}_${row}_$name' />";
+		return "<input name='$self->{prefix}_${row}_$name' value='"
+			. ($self->cell_value($row,$name) || '') . "' />";
 	}
 }
 
-sub as_html {
-	my ($self) = @_;
-	my $prefix = $self->{prefix};
+=head2 $form->cell_value($row, $column_name)
 
-	my $html = "<table>\n";
+This method returns the default value for the given row and column, taken from
+the C<initial_values> passed to the initializer.
 
-	$html .= "\t<thead>\n";
-	$html .= "\t\t<tr>";
-	$html .= "<td></td>"; # header for row number
-	$html .= "<td></td><td></td>"; # header for +/-
-	$html .= "<th>$_</th>" for map { $self->_header($_) } @{$self->{columns}};
-	$html .= "<td></td>"; # header for row number
-	$html .= "</tr>\n";
-	$html .= "\t</thead>\n";
+=cut
 
-	$html .= "\t<tbody>\n";
-	for my $row_number (1 .. $self->{initial_rows}) {
-		my $content = join '', map
-			{ "<td>" . $self->_content($row_number, $_) . "</td>" }
-			@{$self->{columns}};
-		$html .= <<EOT;
-		<tr>
-			<td>$row_number</td>
-		  <td><input type='button' onClick='cloneParentOf(this.parentNode, "$prefix")' value='+' /></td>
-			<td><input type='button' onClick='removeParentOf(this.parentNode, "$prefix")' value='-' /></td>
-			$content
-			<td>$row_number</td>
-		</tr>
-EOT
-	}
-	$html .= "\t</tbody>\n";
-	$html .= "</table>\n";
-
-	return $html;
-}
+sub cell_value {
+	my ($self, $row, $column_name) = @_;
+	return unless defined $self->{initial_values}[--$row];
+	return $self->{initial_values}[$row]{$column_name};
+} 
 
 =head2 javascript
 
@@ -186,7 +245,7 @@ return <<"EOS";
 			for (j = 0; j < rowList[i].cells.length; j++) {
 				prefix_pattern = new RegExp('^' + prefix + '_\\\\d+_');
 
-				element_types = ['button', 'input', 'select'];
+				element_types = ['button', 'input', 'select', 'textarea'];
 				for (type in element_types) {
 					inputs = rowList[i].cells[j].getElementsByTagName(element_types[type]);
 					for (k = 0; k < inputs.length; k++) {
@@ -236,3 +295,5 @@ under the same terms as Perl itself.
 =cut
 
 1;
+
+
