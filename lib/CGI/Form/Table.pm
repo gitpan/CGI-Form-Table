@@ -4,7 +4,7 @@ package CGI::Form::Table;
 use strict;
 use warnings;
 
-our $VERSION = '0.05';
+our $VERSION = '0.07';
 
 =head1 NAME
 
@@ -12,9 +12,9 @@ CGI::Form::Table - create a table of form inputs
 
 =head1 VERSION 
 
-version 0.05
+version 0.07
 
- $Id: Table.pm,v 1.4 2004/10/13 19:53:57 rjbs Exp $
+ $Id: Table.pm,v 1.5 2004/10/18 13:48:11 rjbs Exp $
 
 =head1 SYNOPSIS
 
@@ -26,6 +26,7 @@ version 0.05
  );
 
  print $form->as_html;
+ print $form->javascript;
 
 =head1 DESCRIPTION
 
@@ -78,8 +79,8 @@ sub new {
 
 =head2 C<< CGI::Form::Table->as_html >>
 
-This returns HTML representing the form object.  JavaScript is included to make
-the form expandible/shrinkable.  (L</"SEE ALSO">)
+This returns HTML representing the form object.  JavaScript is required to make
+the form expandible/shrinkable; see the C<javascript> method.  (L</"SEE ALSO">)
 
 =cut
 
@@ -115,24 +116,36 @@ sub _input {
 
 sub as_html {
 	my ($self) = @_;
+	my $prefix = $self->{prefix};
 
 	my $html = "<table>\n";
 
-	$html .= "\t<tr>";
-	$html .= "<td></td><td></td>";
+	$html .= "\t<thead>\n";
+	$html .= "\t\t<tr>";
+	$html .= "<td></td>"; # header for row number
+	$html .= "<td></td><td></td>"; # header for +/-
 	$html .= "<th>$_</th>" for @{$self->{columns}};
+	$html .= "<td></td>"; # header for row number
 	$html .= "</tr>\n";
+	$html .= "\t</thead>\n";
 
+	$html .= "\t<tbody>\n";
 	for my $row_number (1 .. $self->{initial_rows}) {
-		$html .= "\t<tr>";
-		$html .= "<td><input type='button' onClick='cloneParentOf(this.parentNode)' value='+' /></td>";
-		$html .= "<td><input type='button' onClick='removeParentOf(this.parentNode)' value='-' /></td>";
-		$html .= "<td>" . $self->_content($row_number, $_) . "</td>"
-			for @{$self->{columns}};
-		$html .= "</tr>\n";
+		my $content = join '', map
+			{ "<td>" . $self->_content($row_number, $_) . "</td>" }
+			@{$self->{columns}};
+		$html .= <<EOT;
+		<tr>
+			<td>$row_number</td>
+		  <td><input type='button' onClick='cloneParentOf(this.parentNode, "$prefix")' value='+' /></td>
+			<td><input type='button' onClick='removeParentOf(this.parentNode, "$prefix")' value='-' /></td>
+			$content
+			<td>$row_number</td>
+		</tr>
+EOT
 	}
+	$html .= "\t</tbody>\n";
 	$html .= "</table>\n";
-	$html .= "<script type='text/javascript'>" . $self->javascript . "</script>";
 
 	return $html;
 }
@@ -147,30 +160,30 @@ or Omniweb.  (Patches welcome.)
 
 sub javascript {
 	my $self = shift;
-	my $prefix = $self->{prefix};
 return <<"EOS";
-	function removeParentOf(child) {
+	function removeParentOf(child, prefix) {
 		tbody = child.parentNode.parentNode;
 		if (tbody.rows.length > 1)
 			tbody.removeChild(child.parentNode);
-		renumberRows(tbody);
+		renumberRows(tbody, prefix);
 	}
-	function cloneParentOf(child) {
+	function cloneParentOf(child, prefix) {
 		clone = child.parentNode.cloneNode( true );
 		tbody = child.parentNode.parentNode;
 		tbody.insertBefore( clone, child.parentNode );
-		renumberRows(tbody);
+		renumberRows(tbody, prefix);
 	}
-	function renumberRows(tbody) {
+	function renumberRows(tbody, prefix) {
 		var rowList = tbody.rows;
 		for (i = 0; i < rowList.length; i++) {
 			rowNumber = rowList.length - i;
 			rowList.item(i).cells.item(0).firstChild.nodeValue = rowNumber;
 			for (j = 0; j < rowList.item(i).cells.length; j++) {
 				inputs = rowList.item(i).cells.item(j).getElementsByTagName('input');
+				prefix_pattern = new RegExp('^' + prefix + '_\\d+_');
 				for (k = 0; k < inputs.length; k++) {
-					if (inputs[k].name.match(/^${prefix}_\\d+_/))
-						inputs[k].name = inputs[k].name.replace(/^${prefix}_\\d+_/, rowNumber + "_");
+					if (inputs[k].name.match(prefix_pattern))
+						inputs[k].name = inputs[k].name.replace(prefix_pattern, rowNumber + "_");
 				}
 			}
 			var cell_count = rowList.item(i).cells.length;

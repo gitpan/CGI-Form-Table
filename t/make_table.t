@@ -1,4 +1,4 @@
-use Test::More 'no_plan';
+use Test::More tests => 7;
 
 use strict;
 use warnings;
@@ -11,7 +11,8 @@ use_ok( 'CGI::Form::Table' );
 		columns => [qw(profile xmole dopeconc thick dopant)]
 	);
 
-	ok($form->as_html, "got some output");
+	ok($form->as_html,    "got some output");
+	ok($form->javascript, "got some output");
 }
 
 {
@@ -21,7 +22,8 @@ use_ok( 'CGI::Form::Table' );
 		initial_rows => 10
 	);
 
-	ok($form->as_html, "got some output");
+	ok($form->as_html,    "got some output");
+	ok($form->javascript, "got some output");
 }
 
 {
@@ -34,5 +36,6 @@ use_ok( 'CGI::Form::Table' );
 		}
 	);
 
-	ok($form->as_html, "got some output");
+	ok($form->as_html,    "got some output");
+	ok($form->javascript, "got some output");
 }
