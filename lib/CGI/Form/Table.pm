@@ -4,7 +4,7 @@ package CGI::Form::Table;
 use strict;
 use warnings;
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 =head1 NAME
 
@@ -12,9 +12,9 @@ CGI::Form::Table - create a table of form inputs
 
 =head1 VERSION 
 
-version 0.09
+version 0.10
 
- $Id: Table.pm,v 1.8 2004/10/19 23:56:54 rjbs Exp $
+ $Id: Table.pm,v 1.9 2004/10/20 14:24:20 rjbs Exp $
 
 =head1 SYNOPSIS
 
@@ -182,17 +182,24 @@ return <<"EOS";
 		var rowList = tbody.rows;
 		for (i = 0; i < rowList.length; i++) {
 			rowNumber = rowList.length - i;
-			rowList.item(i).cells.item(0).firstChild.nodeValue = rowNumber;
-			for (j = 0; j < rowList.item(i).cells.length; j++) {
-				inputs = rowList.item(i).cells.item(j).getElementsByTagName('input');
-				prefix_pattern = new RegExp('^' + prefix + '_\\d+_');
-				for (k = 0; k < inputs.length; k++) {
-					if (inputs[k].name.match(prefix_pattern))
-						inputs[k].name = inputs[k].name.replace(prefix_pattern, prefix + "_" + rowNumber + "_");
+			rowList[i].cells[0].firstChild.nodeValue = rowNumber;
+			for (j = 0; j < rowList[i].cells.length; j++) {
+				prefix_pattern = new RegExp('^' + prefix + '_\\\\d+_');
+
+				element_types = ['button', 'input', 'select'];
+				for (type in element_types) {
+					inputs = rowList[i].cells[j].getElementsByTagName(element_types[type]);
+					for (k = 0; k < inputs.length; k++) {
+						if (inputs[k].name.match(prefix_pattern))
+							inputs[k].name = inputs[k].name.replace(
+								prefix_pattern,
+								prefix + "_" + rowNumber + "_"
+							);
+					}
 				}
 			}
-			var cell_count = rowList.item(i).cells.length;
-			rowList.item(i).cells.item(cell_count - 1).firstChild.nodeValue = rowNumber;
+			var cell_count = rowList[i].cells.length;
+			rowList[i].cells[cell_count - 1].firstChild.nodeValue = rowNumber;
 		}
 	}
 EOS
