@@ -1,6 +1,5 @@
 Changes
 MANIFEST
-META.yml # Will be created by "make dist"
 Makefile.PL
 README
 lib/CGI/Form/Table.pm
@@ -11,3 +10,6 @@ t/pod-coverage.t
 t/pod.t
 t/make_table.t
 t/read_table.t
+t/perl-critic.t
+LICENSE
+META.yml                                 Module meta-data (added by MakeMaker)
